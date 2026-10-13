@@ -1,0 +1,73 @@
+name: CI/CD Pipeline - Calidad de Software
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+
+jobs:
+  quality-and-tests:
+    name: Verificación, Calidad y Pruebas
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.10", "3.11", "3.12"]
+
+    steps:
+      - name: Checkout del repositorio
+        uses: actions/checkout@v4
+
+      - name: Configurar entorno Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: "pip"
+
+      - name: Instalar dependencias
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Validación de formato con Ruff
+        run: |
+          ruff check json2csv.py src/ tests/
+
+      - name: Validación de formato consistente con Black
+        run: |
+          black --check --exclude "collatz_original\.py" json2csv.py src/ tests/
+
+      - name: Validación de reglas PEP 8 con Flake8
+        run: |
+          flake8 --max-line-length=88 --extend-ignore=E203,W503 --exclude="venv,src/collatz/collatz_original.py,scratch" json2csv.py src/ tests/
+
+      - name: Validación de docstrings PEP 257 con Pydocstyle
+        run: |
+          pydocstyle --match='(?!collatz_original).*\.py' json2csv.py src/ tests/
+
+      - name: Chequeo estático de tipos con MyPy
+        run: |
+          mypy json2csv.py src/
+
+      - name: Chequeo estático de tipos con Pyright
+        run: |
+          pyright json2csv.py src/collatz/collatz.py src/json2csv/
+
+      - name: Pruebas unitarias y cobertura con Pytest (>= 85%)
+        run: |
+          PYTHONPATH=. pytest tests/ -v --cov=src --cov=json2csv --cov-fail-under=85
+
+      - name: Evaluación de seguridad con Bandit (sin Trufflehog)
+        run: |
+          bandit -r json2csv.py src/ -x src/collatz/collatz_original.py
+
+      - name: Generar documentación HTML con pdoc
+        run: |
+          PYTHONPATH=. pdoc -o docs/ src.json2csv src.collatz json2csv
+
+      - name: Subir artefactos de documentación
+        uses: actions/upload-artifact@v4
+        if: matrix.python-version == '3.12'
+        with:
+          name: html-docs
+          path: docs/

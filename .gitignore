@@ -1,0 +1,31 @@
+# Entornos virtuales
+venv/
+.venv/
+env/
+
+# Caches de Python
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Herramientas de testing y linters
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# Archivos de entrega local (NO subir a GitHub)
+ENTREGA_TP11.md
+INFORME_TP11.md
+*ENTREGA*.md
+*INFORME*.md
+
+# Scratch y temporales
+scratch/
+.idea/
+.vscode/
+*.tmp
+prueba.json
+salida*.csv
+*.csv
