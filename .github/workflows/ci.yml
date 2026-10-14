@@ -27,6 +27,9 @@ jobs:
       - name: Instalar dependencias
         run: |
           python -m pip install --upgrade pip
+          if [ -f REQUIREMENTS.TXT ] && [ ! -f requirements.txt ]; then
+            cp REQUIREMENTS.TXT requirements.txt
+          fi
           pip install -r requirements.txt
 
       - name: Validación de formato con Ruff
@@ -39,7 +42,7 @@ jobs:
 
       - name: Validación de reglas PEP 8 con Flake8
         run: |
-          flake8 --max-line-length=88 --extend-ignore=E203,W503 --exclude="venv,src/collatz/collatz_original.py,scratch" json2csv.py src/ tests/
+          flake8 --max-line-length=88 --extend-ignore=E203,W503 --exclude="venv,samples,scratch" json2csv.py src/ tests/
 
       - name: Validación de docstrings PEP 257 con Pydocstyle
         run: |
@@ -59,7 +62,7 @@ jobs:
 
       - name: Evaluación de seguridad con Bandit (sin Trufflehog)
         run: |
-          bandit -r json2csv.py src/ -x src/collatz/collatz_original.py
+          bandit -r json2csv.py src/ -x samples/collatz_original.py
 
       - name: Generar documentación HTML con pdoc
         run: |
